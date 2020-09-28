@@ -1,6 +1,6 @@
 from gym_multigrid.multigrid import *
 
-class SoccerGameEnv(MultiGridEnv):
+class PutNearEnv(MultiGridEnv):
     """
     Environment in which the agents have to fetch the balls and drop them in their respective goals
     """
@@ -15,18 +15,26 @@ class SoccerGameEnv(MultiGridEnv):
         num_balls=[],
         agents_index = [],
         balls_index=[],
-        zero_sum = False
-
+        zero_sum=False,
+        path=[]
     ):
+
         self.num_balls = num_balls
         self.goal_pst = goal_pst
         self.goal_index = goal_index
+
+        # colour of the ball
         self.balls_index = balls_index
         self.zero_sum = zero_sum
+        self.path=path
 
         agents = []
         for i in agents_index:
-            agents.append(Agent(i))
+            agent = Agent(i)
+            agents.append(agent)
+            agent.pos = (1,1)
+            print(agent.pos)
+
 
         super().__init__(
             grid_size=size,
@@ -35,7 +43,8 @@ class SoccerGameEnv(MultiGridEnv):
             max_steps= 10000,
             # Set this to True for maximum speed
             see_through_walls=True,
-            agents=agents
+            agents=agents,
+            partial_obs=True
         )
 
     def _gen_grid(self, width, height):
@@ -47,6 +56,16 @@ class SoccerGameEnv(MultiGridEnv):
         self.grid.vert_wall(0, 0)
         self.grid.vert_wall(width-1, 0)
 
+        # add in maze walls
+        if len(self.path) < 1:
+            for wall in self.walls:
+                self.grid.set(*wall, Wall())
+        else:
+            for i in range(1, self.width - 1):
+                for j in range(1, self.height - 1):
+                    if (j, i) not in self.path:
+                        self.grid.set(j, i, Wall())
+
         for i in range(len(self.goal_pst)):
             self.place_obj(ObjectGoal(self.goal_index[i], 'ball'), top=self.goal_pst[i], size=[1,1])
 
@@ -56,7 +75,7 @@ class SoccerGameEnv(MultiGridEnv):
 
         # Randomize the player start position and orientation
         for a in self.agents:
-            self.place_agent(a)
+            self.place_agent(a, a.pos)
 
     def _reward(self, i, rewards,reward=1):
         for j,a in enumerate(self.agents):
@@ -95,20 +114,32 @@ class SoccerGameEnv(MultiGridEnv):
                 self.agents[i].carrying.cur_pos = fwd_pos
                 self.agents[i].carrying = None
 
-
     def step(self, actions):
         obs, rewards, done, info = MultiGridEnv.step(self, actions)
         return obs, rewards, done, info
 
 
-class SoccerGame4HEnv10x15N2(SoccerGameEnv):
+class PutNearEnv12x12N2(PutNearEnv):
     def __init__(self):
         super().__init__(size=None,
-        height=10,
-        width=15,
-        goal_pst = [[1,5], [13,5]],
-        goal_index = [1,2],
-        num_balls=[1],
-        agents_index = [1,1,2,2],
-        balls_index=[0],
-        zero_sum=True)
+        height=12,
+        width=12,
+        goal_pst = [[6,5]],
+        goal_index = [0],
+        num_balls=[2, 4],
+        agents_index = [4,4,4,4],
+        balls_index=[5,5,5,5,5],
+        zero_sum=True,
+        path=[
+            (1, 1), (2, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9,1), (10,1),
+            (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6,2), (10, 2),
+            (1, 3), (5, 3), (10, 3),
+            (1, 4), (5, 4), (10, 4),
+            (1, 5), (5, 5), (10, 5),
+            (1, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6),
+            (1, 7), (7, 7), (10, 7),
+            (1, 8), (7, 8), (10, 8),
+            (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (10, 9),
+            (1, 10), (7, 10), (8, 10), (9, 10), (10, 10),
+            (6, 2), (9, 7), (9, 2), (6, 10), (6,5), (6,4), (7,5), (7,4)],
+        )

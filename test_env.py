@@ -10,12 +10,12 @@ args = parser.parse_args()
 
 def main():
 
-    if args.env == 'soccer':
+    if args.env == 'putnear':
         register(
-            id='multigrid-soccer-v0',
-            entry_point='gym_multigrid.envs:SoccerGame4HEnv10x15N2',
+            id='multigrid-putnear-v0',
+            entry_point='gym_multigrid.envs:PutNearEnv12x12N2',
         )
-        env = gym.make('multigrid-soccer-v0')
+        env = gym.make('multigrid-putnear-v0')
 
     else:
         register(
@@ -34,7 +34,10 @@ def main():
 
         ac = [env.action_space.sample() for _ in range(nb_agents)]
 
-        _, _, done, _ = env.step(ac)
+        obs, rewards, done, info = env.step(ac)
+
+        # print("\nactions:", ac)
+        # print("Obs: {}\nRewards: {}\nInfo: {}".format(obs[0].shape, rewards, info))
 
         if done:
             break

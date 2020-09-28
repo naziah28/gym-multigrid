@@ -363,7 +363,7 @@ class Agent(WorldObj):
         self.pos = None
         self.dir = None
         self.index = index
-        self.view_size = 7
+        self.view_size = 3
         self.carrying = None
         self.terminated = False
         self.started = True
@@ -834,9 +834,9 @@ class MultiGridEnv(gym.Env):
         max_steps=100,
         see_through_walls=False,
         seed=1,
-        view_size=7,
+        view_size=3,
         agents = None,
-        partial_obs = True
+        partial_obs = False
     ):
         self.agents = agents
 
@@ -1180,9 +1180,9 @@ class MultiGridEnv(gym.Env):
 
         rewards = np.zeros(len(actions))
         done = False
-        
-        for i in order:
 
+        # execute actions one by one
+        for i in order:
             if self.agents[i].terminated or self.agents[i].paused or not self.agents[i].started:
                 continue
 
